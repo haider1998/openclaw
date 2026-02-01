@@ -37,11 +37,13 @@ done
 
 To convert 3:00 PM EST to other timezones:
 
+**GNU/Linux:**
+
 ```bash
 # Set the source time in EST
 SOURCE_TIME="2026-02-01 15:00:00"
 
-# Convert to PST
+# Convert to PST (GNU date uses -d)
 TZ="America/Los_Angeles" date -d "TZ=\"America/New_York\" $SOURCE_TIME" "+%H:%M %Z"
 # Output: 12:00 PST
 
@@ -50,28 +52,29 @@ TZ="UTC" date -d "TZ=\"America/New_York\" $SOURCE_TIME" "+%H:%M %Z"
 # Output: 20:00 UTC
 ```
 
-**macOS Note:** Use `-j -f` instead of `-d`:
+**macOS/BSD:**
 
 ```bash
-# macOS: Convert 3pm EST to PST
+# macOS date uses -j -f (incompatible with GNU date)
 TZ="America/Los_Angeles" date -j -f "%Y-%m-%d %H:%M:%S" "2026-02-01 15:00:00" "+%H:%M %Z"
+# Output: 12:00 PST
 ```
 
 ## Common timezone identifiers
 
-| Region | Timezone ID | Common Name |
-|--------|-------------|-------------|
-| US East | `America/New_York` | EST/EDT |
-| US Central | `America/Chicago` | CST/CDT |
-| US Mountain | `America/Denver` | MST/MDT |
-| US Pacific | `America/Los_Angeles` | PST/PDT |
-| UK | `Europe/London` | GMT/BST |
-| Central Europe | `Europe/Paris` | CET/CEST |
-| India | `Asia/Kolkata` | IST |
-| China | `Asia/Shanghai` | CST |
-| Japan | `Asia/Tokyo` | JST |
-| Australia East | `Australia/Sydney` | AEST/AEDT |
-| UTC | `UTC` | UTC |
+| Region         | Timezone ID           | Common Name |
+| -------------- | --------------------- | ----------- |
+| US East        | `America/New_York`    | EST/EDT     |
+| US Central     | `America/Chicago`     | CST/CDT     |
+| US Mountain    | `America/Denver`      | MST/MDT     |
+| US Pacific     | `America/Los_Angeles` | PST/PDT     |
+| UK             | `Europe/London`       | GMT/BST     |
+| Central Europe | `Europe/Paris`        | CET/CEST    |
+| India          | `Asia/Kolkata`        | IST         |
+| China          | `Asia/Shanghai`       | CST         |
+| Japan          | `Asia/Tokyo`          | JST         |
+| Australia East | `Australia/Sydney`    | AEST/AEDT   |
+| UTC            | `UTC`                 | UTC         |
 
 ## List all available timezones
 

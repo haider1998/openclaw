@@ -98,7 +98,7 @@ func sortHTMLReplacements(replacements []htmlReplacement) {
 func translateHTMLBlock(ctx context.Context, translator *PiTranslator, htmlText, srcLang, tgtLang string) (string, error) {
 	tokenizer := html.NewTokenizer(strings.NewReader(htmlText))
 	var out strings.Builder
-	var stack []string
+	skipDepth := 0
 
 	for {
 		tt := tokenizer.Next()
@@ -115,14 +115,18 @@ func translateHTMLBlock(ctx context.Context, translator *PiTranslator, htmlText,
 		switch tt {
 		case html.StartTagToken:
 			out.WriteString(raw)
-			stack = append(stack, strings.ToLower(tok.Data))
+			if isSkipTag(strings.ToLower(tok.Data)) {
+				skipDepth++
+			}
 		case html.EndTagToken:
 			out.WriteString(raw)
-			stack = popTag(stack, strings.ToLower(tok.Data))
+			if isSkipTag(strings.ToLower(tok.Data)) && skipDepth > 0 {
+				skipDepth--
+			}
 		case html.SelfClosingTagToken:
 			out.WriteString(raw)
 		case html.TextToken:
-			if shouldTranslateHTMLText(stack, raw) {
+			if shouldTranslateHTMLText(skipDepth, raw) {
 				translated, err := translator.Translate(ctx, raw, srcLang, tgtLang)
 				if err != nil {
 					return "", err
@@ -139,30 +143,18 @@ func translateHTMLBlock(ctx context.Context, translator *PiTranslator, htmlText,
 	return out.String(), nil
 }
 
-func shouldTranslateHTMLText(stack []string, text string) bool {
+func shouldTranslateHTMLText(skipDepth int, text string) bool {
 	if strings.TrimSpace(text) == "" {
 		return false
 	}
-	for _, tag := range stack {
-		switch tag {
-		case "code", "pre", "script", "style":
-			return false
-		}
-	}
-	return true
+	return skipDepth == 0
 }
 
-func popTag(stack []string, tag string) []string {
-	if len(stack) == 0 {
-		return stack
+func isSkipTag(tag string) bool {
+	switch tag {
+	case "code", "pre", "script", "style":
+		return true
+	default:
+		return false
 	}
-	if stack[len(stack)-1] == tag {
-		return stack[:len(stack)-1]
-	}
-	for i := len(stack) - 2; i >= 0; i-- {
-		if stack[i] == tag {
-			return stack[:i]
-		}
-	}
-	return stack
 }

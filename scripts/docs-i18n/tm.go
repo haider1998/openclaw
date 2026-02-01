@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -41,23 +42,27 @@ func LoadTranslationMemory(path string) (*TranslationMemory, error) {
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
+	reader := bufio.NewReader(file)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if len(line) > 0 {
+			trimmed := strings.TrimSpace(string(line))
+			if trimmed != "" {
+				var entry TMEntry
+				if err := json.Unmarshal([]byte(trimmed), &entry); err != nil {
+					return nil, fmt.Errorf("translation memory decode failed: %w", err)
+				}
+				if entry.CacheKey != "" {
+					tm.entries[entry.CacheKey] = entry
+				}
+			}
 		}
-		var entry TMEntry
-		if err := json.Unmarshal([]byte(line), &entry); err != nil {
-			return nil, fmt.Errorf("translation memory decode failed: %w", err)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, err
 		}
-		if entry.CacheKey == "" {
-			continue
-		}
-		tm.entries[entry.CacheKey] = entry
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
 	}
 	return tm, nil
 }

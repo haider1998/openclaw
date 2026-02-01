@@ -16,12 +16,15 @@ func processFile(ctx context.Context, translator *PiTranslator, tm *TranslationM
 	if err != nil {
 		return err
 	}
-	if !strings.HasPrefix(absPath, docsRoot) {
-		return fmt.Errorf("file %s not under docs root %s", absPath, docsRoot)
-	}
 	relPath, err := filepath.Rel(docsRoot, absPath)
 	if err != nil {
 		return err
+	}
+	if relPath == "." || relPath == "" {
+		return fmt.Errorf("file %s resolves to docs root %s", absPath, docsRoot)
+	}
+	if filepath.IsAbs(relPath) || relPath == ".." || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
+		return fmt.Errorf("file %s not under docs root %s", absPath, docsRoot)
 	}
 
 	content, err := os.ReadFile(absPath)

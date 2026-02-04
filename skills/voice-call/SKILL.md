@@ -1,6 +1,7 @@
 ---
 name: voice-call
 description: Start voice calls via the OpenClaw voice-call plugin.
+homepage: https://docs.openclaw.ai/channels/voice-call
 metadata:
   {
     "openclaw":
